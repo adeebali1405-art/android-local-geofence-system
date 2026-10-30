@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GeoFence Local – Android Local Geofence System BY M.Adeeb Ali Softwer Developr</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0d0c;--card:#141816;--line:#252b28;--tx:#c8a724;--mut:#8b968f;--ac:#234d9b9f;--red:#ff6b6b;--blue:#6bb8ff;color-scheme:dark}
+@media (prefers-color-scheme:light){:root:not([data-theme=dark]){--bg:#0b0d0c}}
+*{box-sizing:border-box;margin:0}
+html,body{background:var(--bg);color:var(--tx);font:14px Inter,system-ui,sans-serif}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+h1,h2,.num{font-family:'Space Grotesk',Inter,sans-serif}
+header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:10px;font:700 20px 'Space Grotesk',sans-serif}
+.logo i{width:34px;height:34px;border-radius:10px;background:var(--ac);color:#000;display:grid;place-items:center;font-style:normal}
+.logo small{display:block;font:400 12px Inter;color:var(--mut)}
+.stats{display:flex;gap:10px;flex-wrap:wrap}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 14px;min-width:84px}
+.stat b{display:block;font-size:20px;color:var(--ac)}.stat span{color:var(--mut);font-size:11px}
+main{display:grid;grid-template-columns:1fr 340px;gap:16px;padding:16px 20px;max-width:1300px;margin:auto}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+.map{position:relative;padding:0;overflow:hidden}
+canvas{display:block;width:100%;height:min(62vh,560px);touch-action:none;cursor:crosshair}
+.badge{position:absolute;top:12px;left:12px;background:#000a;backdrop-filter:blur(6px);border:1px solid var(--line);padding:6px 12px;border-radius:99px;font-size:12px;display:flex;gap:8px;align-items:center}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--mut)}.dot.on{background:var(--ac);box-shadow:0 0 8px var(--ac)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+button{background:#1c221f;color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:9px 13px;font:500 13px Inter;cursor:pointer;transition:.15s}
+button:hover{border-color:var(--ac)}button.on{background:var(--ac);color:#000;border-color:var(--ac)}
+.row{display:flex;align-items:center;gap:10px;margin-top:12px;color:var(--mut);font-size:12px}
+input[type=range]{flex:1;accent-color:var(--ac)}
+h2{font-size:15px;margin-bottom:10px;display:flex;justify-content:space-between}
+.side{display:flex;flex-direction:column;gap:16px}
+ul{list-style:none;padding:0;max-height:200px;overflow:auto}
+li{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:10px;border:1px solid var(--line);margin-bottom:6px}
+li.in{border-color:var(--ac);background:#e0f1cb15}
+li button{padding:3px 9px}
+.log li{font-size:12px;border:0;border-bottom:1px solid var(--line);border-radius:0;gap:8px;justify-content:flex-start}
+.tag{font:700 10px 'Space Grotesk';padding:2px 7px;border-radius:6px;color:#000}
+.ENTER{background:var(--ac)}.EXIT{background:var(--red)}.DWELL{background:var(--blue)}
+.t{color:var(--mut);margin-left:auto}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,120px);background:var(--ac);color:#000;font-weight:600;padding:12px 20px;border-radius:14px;transition:.3s;z-index:9}
+#toast.show{transform:translate(-50%,0)}
+.empty{color:var(--mut);padding:8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><i>◎</i><div>GeoFence Local<small>Android-style on-device geofencing engine BY M.Adeeb Ali Softwer Developr</small></div></div>
+  <div class="stats">
+    <div class="stat"><b id="sF">0</b><span>Fences</span></div>
+    <div class="stat"><b id="sI">0</b><span>Inside</span></div>
+    <div class="stat"><b id="sE">0</b><span>Events</span></div>
+    <div class="stat"><b id="sC">–</b><span>Position (m)</span></div>
+  </div>
+</header>
+<main>
+  <section>
+    <div class="card map">
+      <canvas id="cv"></canvas>
+      <div class="badge"><span class="dot" id="dot"></span><span id="mode">Drag the device or click to add a fence</span></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="bar">
+        <button id="bMove" class="on">🖐 Move device</button>
+        <button id="bAdd">➕ Add fence</button>
+        <button id="bSim">🚶 Auto-walk</button>
+        <button id="bGps">📡 Real GPS</button>
+      </div>
+      <div class="row">Radius <input type="range" id="rad" min="30" max="200" value="90"><b id="radV" style="color:var(--ac)">90 m</b></div>
+      <div class="row">Dwell time <input type="range" id="dw" min="2" max="15" value="5"><b id="dwV" style="color:var(--ac)">5 s</b></div>
+    </div>
+  </section>
+  <aside class="side">
+    <div class="card"><h2>Geofences <button id="bClr">Clear</button></h2><ul id="list"></ul></div>
+    <div class="card"><h2>Event log <button id="bExp">⬇ JSON</button></h2><ul id="log" class="log"></ul></div>
+  </aside>
+</main>
+<div id="toast"></div>
+<script>
+const $=s=>document.querySelector(s),W=1000,H=700,KEY='geofence.v1';
+const cv=$('#cv'),ctx=cv.getContext('2d');
+const S={fences:[],dev:{x:500,y:350},events:[],mode:'move',sim:false,gps:false,r:90,dwell:5,drag:false,tgt:null,origin:null};
+let sc=1,ox=0,oy=0,dpr=1,nextId=1;
+
+/* ---------- storage ---------- */
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({f:S.fences.map(({id,name,x,y,r})=>({id,name,x,y,r})),e:S.events.slice(0,100)}))}catch{}};
+const load=()=>{try{const d=JSON.parse(localStorage.getItem(KEY)||'null');if(d){S.fences=d.f.map(f=>({...f,inside:false,since:0,dw:false}));S.events=d.e||[];nextId=Math.max(0,...d.f.map(f=>f.id))+1}}catch{}
+ if(!S.fences.length){[['Home',250,200,90],['Office',700,250,100],['Gym',520,520,70]].forEach(([n,x,y,r])=>S.fences.push({id:nextId++,name:n,x,y,r,inside:false,since:0,dw:false}))}};
+
+/* ---------- geofence engine ---------- */
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+function fire(type,f){
+  const e={type,name:f.name,t:new Date().toLocaleTimeString()};S.events.unshift(e);S.events=S.events.slice(0,100);
+  toast(`${type==='ENTER'?'📍 Entered':type==='EXIT'?'🚪 Left':'⏱ Dwelling in'} ${f.name}`);
+  try{navigator.vibrate&&navigator.vibrate(type==='ENTER'?[80,40,80]:60)}catch{}
+  save();render();
+}
+function check(now){
+  S.fences.forEach(f=>{
+    const d=dist(S.dev,f),h=f.inside?6:0; // 6 m hysteresis stops GPS jitter flapping
+    const inn=d<=f.r+h;
+    if(inn&&!f.inside){f.inside=true;f.since=now;f.dw=false;fire('ENTER',f)}
+    else if(!inn&&f.inside){f.inside=false;fire('EXIT',f)}
+    else if(inn&&!f.dw&&now-f.since>=S.dwell*1000){f.dw=true;fire('DWELL',f)}
+  });
+}
+
+/* ---------- rendering ---------- */
+function resize(){dpr=devicePixelRatio||1;const b=cv.getBoundingClientRect();cv.width=b.width*dpr;cv.height=b.height*dpr;sc=Math.min(cv.width/W,cv.height/H);ox=(cv.width-W*sc)/2;oy=(cv.height-H*sc)/2}
+const P=(x,y)=>[ox+x*sc,oy+y*sc];
+function draw(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#0f1311';const [x0,y0]=P(0,0);ctx.fillRect(x0,y0,W*sc,H*sc);
+  ctx.strokeStyle='#1c231f';ctx.lineWidth=1;
+  for(let i=0;i<=W;i+=50){const[a,b]=P(i,0),[,c]=P(0,H);ctx.beginPath();ctx.moveTo(a,b);ctx.lineTo(a,c);ctx.stroke()}
+  for(let j=0;j<=H;j+=50){const[a,b]=P(0,j),[c]=P(W,0);ctx.beginPath();ctx.moveTo(a,b);ctx.lineTo(c,b);ctx.stroke()}
+  S.fences.forEach(f=>{
+    const[x,y]=P(f.x,f.y),r=f.r*sc;
+    ctx.beginPath();ctx.arc(x,y,r,0,7);
+    ctx.fillStyle=f.inside?'rgba(185,255,102,.18)':'rgba(107,184,255,.08)';ctx.fill();
+    ctx.setLineDash(f.inside?[]:[8,6]);ctx.strokeStyle=f.inside?'#b9ff66':'#6bb8ff';ctx.lineWidth=2*dpr;ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#eef2ef';ctx.font=`600 ${13*dpr}px Inter`;ctx.textAlign='center';ctx.fillText(f.name,x,y-4*dpr);
+    ctx.fillStyle='#8b968f';ctx.font=`${11*dpr}px Inter`;ctx.fillText(f.r+' m',x,y+12*dpr);
+  });
+  const[dx,dy]=P(S.dev.x,S.dev.y),t=performance.now()/600%1;
+  ctx.beginPath();ctx.arc(dx,dy,(10+t*22)*dpr,0,7);ctx.strokeStyle=`rgba(185,255,102,${1-t})`;ctx.lineWidth=2*dpr;ctx.stroke();
+  ctx.beginPath();ctx.arc(dx,dy,8*dpr,0,7);ctx.fillStyle='#b9ff66';ctx.fill();ctx.strokeStyle='#000';ctx.stroke();
+}
+function render(){
+  $('#sF').textContent=S.fences.length;$('#sI').textContent=S.fences.filter(f=>f.inside).length;$('#sE').textContent=S.events.length;
+  $('#sC').textContent=`${S.dev.x|0}, ${S.dev.y|0}`;
+  $('#list').innerHTML=S.fences.map(f=>`<li class="${f.inside?'in':''}"><span>${f.inside?'🟢':'⚪'} ${esc(f.name)} <small style="color:var(--mut)">${f.r} m</small></span><button data-d="${f.id}">✕</button></li>`).join('')||'<div class="empty">No fences yet.</div>';
+  $('#log').innerHTML=S.events.map(e=>`<li><span class="tag ${e.type}">${e.type}</span>${esc(e.name)}<span class="t">${e.t}</span></li>`).join('')||'<div class="empty">Events appear here.</div>';
+}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2200)}
+
+/* ---------- input ---------- */
+const pos=e=>{const b=cv.getBoundingClientRect();return{x:((e.clientX-b.left)*dpr-ox)/sc,y:((e.clientY-b.top)*dpr-oy)/sc}};
+const clamp=(v,m)=>Math.max(0,Math.min(m,v));
+cv.onpointerdown=e=>{
+  const p=pos(e);
+  if(S.mode==='add'){const n=prompt('Fence name','Zone '+nextId);if(n===null)return;
+    S.fences.push({id:nextId++,name:n.trim()||'Zone',x:clamp(p.x,W),y:clamp(p.y,H),r:S.r,inside:false,since:0,dw:false});save();render();return}
+  S.drag=true;S.sim=false;$('#bSim').classList.remove('on');cv.setPointerCapture(e.pointerId);move(p)};
+cv.onpointermove=e=>{if(S.drag)move(pos(e))};
+cv.onpointerup=()=>S.drag=false;
+function move(p){S.dev.x=clamp(p.x,W);S.dev.y=clamp(p.y,H);check(performance.now());render()}
+function setMode(m){S.mode=m;$('#bMove').classList.toggle('on',m==='move');$('#bAdd').classList.toggle('on',m==='add');
+  $('#mode').textContent=m==='add'?'Tap map to place a fence':'Drag the device to test geofences'}
+$('#bMove').onclick=()=>setMode('move');$('#bAdd').onclick=()=>setMode('add');
+$('#bSim').onclick=e=>{S.sim=!S.sim;e.currentTarget.classList.toggle('on',S.sim);if(S.sim)S.gps=false,$('#bGps').classList.remove('on')};
+$('#rad').oninput=e=>{S.r=+e.target.value;$('#radV').textContent=S.r+' m'};
+$('#dw').oninput=e=>{S.dwell=+e.target.value;$('#dwV').textContent=S.dwell+' s'};
+$('#list').onclick=e=>{const id=+e.target.dataset.d;if(id){S.fences=S.fences.filter(f=>f.id!==id);save();render()}};
+$('#bClr').onclick=()=>{S.fences=[];S.events=[];save();render()};
+$('#bExp').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({fences:S.fences.map(({name,x,y,r})=>({name,x,y,r})),events:S.events},null,2)],{type:'application/json'}));a.download='geofence-export.json';a.click()};
+
+/* ---------- real GPS (metres from first fix) ---------- */
+let wid=null;
+$('#bGps').onclick=e=>{
+  if(S.gps){S.gps=false;navigator.geolocation.clearWatch(wid);e.currentTarget.classList.remove('on');return}
+  if(!navigator.geolocation)return toast('GPS not supported');
+  S.gps=true;S.sim=false;S.origin=null;$('#bSim').classList.remove('on');e.currentTarget.classList.add('on');
+  wid=navigator.geolocation.watchPosition(g=>{
+    const{latitude:la,longitude:lo}=g.coords;
+    if(!S.origin)S.origin={la,lo};
+    const k=111320;S.dev.x=clamp(W/2+(lo-S.origin.lo)*k*Math.cos(la*Math.PI/180),W);S.dev.y=clamp(H/2-(la-S.origin.la)*k,H);
+    check(performance.now());render()},
+    ()=>{toast('GPS unavailable – use simulation');S.gps=false;$('#bGps').classList.remove('on')},{enableHighAccuracy:true});
+};
+
+/* ---------- loop ---------- */
+function loop(){
+  if(S.sim){
+    if(!S.tgt||dist(S.dev,S.tgt)<4){const f=S.fences[Math.random()*S.fences.length|0];S.tgt=f&&Math.random()<.8?{x:f.x+(Math.random()-.5)*f.r,y:f.y+(Math.random()-.5)*f.r}:{x:Math.random()*W,y:Math.random()*H}}
+    const d=dist(S.dev,S.tgt)||1;S.dev.x+=(S.tgt.x-S.dev.x)/d*1.6;S.dev.y+=(S.tgt.y-S.dev.y)/d*1.6;render();
+  }
+  check(performance.now());$('#dot').classList.toggle('on',S.sim||S.gps||S.drag);draw();requestAnimationFrame(loop);
+}
+addEventListener('resize',resize);load();resize();render();loop();
+</script>
+</body>
+</html>
